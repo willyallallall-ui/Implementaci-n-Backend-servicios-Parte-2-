@@ -27,24 +27,14 @@ public class Entrega {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    // Texto o enlace con la respuesta del estudiante
     private String contenido;
-
-    // Se asigna sola en el servicio
     private LocalDate fechaEntrega;
-
-    // "ENTREGADA" o "CALIFICADA" (se asigna en el servicio)
     private String estado;
-    
-        // Nota puesta por el docente (null mientras no esté calificada)
     private Double nota;
-
-    // Comentario del docente
     private String retroalimentacion;
-
-    // Se asigna sola al calificar
-    private LocalDate fechaCalificacion;
+    private LocalDate fechaCalificacion;  
+    private String archivoOriginal;
+    private String archivoGuardado;
 
     @NotNull(message = "La actividad es obligatoria")
     @ManyToOne
@@ -85,6 +75,10 @@ public class Entrega {
 
     public LocalDate getFechaCalificacion() { return fechaCalificacion; }
     public void setFechaCalificacion(LocalDate fechaCalificacion) { this.fechaCalificacion = fechaCalificacion; }
-    
-    
+
+    public String getArchivoOriginal() { return archivoOriginal; }
+    public void setArchivoOriginal(String archivoOriginal) { this.archivoOriginal = archivoOriginal; }
+
+    public String getArchivoGuardado() { return archivoGuardado; }
+    public void setArchivoGuardado(String archivoGuardado) { this.archivoGuardado = archivoGuardado; }
 }

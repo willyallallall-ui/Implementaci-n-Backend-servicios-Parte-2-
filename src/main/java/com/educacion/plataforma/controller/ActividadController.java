@@ -7,6 +7,7 @@ package com.educacion.plataforma.controller;
 import com.educacion.plataforma.entity.Actividad;
 import com.educacion.plataforma.service.ActividadService;
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -63,6 +64,11 @@ public class ActividadController {
         return actividadService.actualizar(id, actividad);
     }
 
+    @GetMapping("/curso/{cursoId}/porcentajes")
+    public Map<String, Object> porcentajes(@PathVariable Long cursoId) {
+        return actividadService.resumenPorcentajes(cursoId);
+    }    
+    
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@PathVariable Long id) {

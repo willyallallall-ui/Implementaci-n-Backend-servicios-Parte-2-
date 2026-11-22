@@ -58,6 +58,11 @@ public class InscripcionController {
     public Inscripcion crear(@Valid @RequestBody Inscripcion inscripcion) {
         return inscripcionService.crear(inscripcion);
     }
+    
+    @PutMapping("/retiro")
+    public Inscripcion retirar(@RequestParam Long cursoId, @RequestParam Long estudianteId) {
+        return inscripcionService.retirar(cursoId, estudianteId);
+    }
 
     @PutMapping("/{id}/cancelar")
     public Inscripcion cancelar(@PathVariable Long id) {

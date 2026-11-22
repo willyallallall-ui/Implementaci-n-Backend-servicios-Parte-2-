@@ -7,6 +7,7 @@ package com.educacion.plataforma.controller;
 
 import com.educacion.plataforma.dto.ProgresoResponse;
 import com.educacion.plataforma.service.ProgresoService;
+import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,4 +33,10 @@ public class ProgresoController {
                                      @PathVariable Long estudianteId) {
         return progresoService.calcular(cursoId, estudianteId);
     }
+    
+    @GetMapping("/curso/{cursoId}/estudiante/{estudianteId}/notas")
+    public Map<String, Object> notas(@PathVariable Long cursoId,
+                                     @PathVariable Long estudianteId) {
+        return progresoService.detalleNotas(cursoId, estudianteId);
+    }    
 }

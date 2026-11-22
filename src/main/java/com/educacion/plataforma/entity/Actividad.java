@@ -16,6 +16,7 @@ import javax.persistence.Table;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.DecimalMax;
 
 /**
  *
@@ -41,6 +42,11 @@ public class Actividad {
     @NotNull(message = "El puntaje máximo es obligatorio")
     @DecimalMin(value = "0.1", message = "El puntaje máximo debe ser mayor que 0")
     private Double puntajeMaximo;
+    
+    @NotNull(message = "El porcentaje es obligatorio")
+    @DecimalMin(value = "0.1", message = "El porcentaje debe ser mayor que 0")
+    @DecimalMax(value = "100", message = "El porcentaje no puede superar 100")
+    private Double porcentaje;
 
     private LocalDate fechaLimite;
 
@@ -72,4 +78,7 @@ public class Actividad {
 
     public Unidad getUnidad() { return unidad; }
     public void setUnidad(Unidad unidad) { this.unidad = unidad; }
+    
+    public Double getPorcentaje() { return porcentaje; }
+    public void setPorcentaje(Double porcentaje) { this.porcentaje = porcentaje; }
 }

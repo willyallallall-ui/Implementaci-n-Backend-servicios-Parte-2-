@@ -61,6 +61,21 @@ public class CursoController {
     public Curso actualizar(@PathVariable Long id, @Valid @RequestBody Curso curso) {
         return cursoService.actualizar(id, curso);
     }
+    
+    @GetMapping("/publicados")
+    public List<Curso> publicados() {
+        return cursoService.listarPublicados();
+    }
+
+    @PutMapping("/{id}/publicar")
+    public Curso publicar(@PathVariable Long id, @RequestParam Long coordinadorId) {
+        return cursoService.publicar(id, coordinadorId);
+    }
+
+    @PutMapping("/{id}/despublicar")
+    public Curso despublicar(@PathVariable Long id, @RequestParam Long coordinadorId) {
+        return cursoService.despublicar(id, coordinadorId);
+    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

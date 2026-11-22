@@ -21,6 +21,7 @@ public interface EntregaRepository extends JpaRepository<Entrega, Long> {
     List<Entrega> findByEstudianteId(Long estudianteId);
 
     boolean existsByActividadIdAndEstudianteId(Long actividadId, Long estudianteId);
+    long countByEstado(String estado);    
 
     List<Entrega> findByEstudianteIdAndActividadUnidadCursoId(Long estudianteId, Long cursoId);
 

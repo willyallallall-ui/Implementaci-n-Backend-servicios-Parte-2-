@@ -79,6 +79,11 @@ public class CargadorDatos implements CommandLineRunner {
         estudiante.setNombre("ESTUDIANTE");
         estudiante.setDescripcion("Toma cursos y realiza actividades");
         estudiante = rolRepository.save(estudiante);
+        
+        Rol coordinadorRol = new Rol();
+        coordinadorRol.setNombre("COORDINADOR");
+        coordinadorRol.setDescripcion("Publica cursos, asigna docentes y genera reportes");
+        coordinadorRol = rolRepository.save(coordinadorRol);
 
         // Usuarios
         Usuario carlos = new Usuario();
@@ -87,7 +92,8 @@ public class CargadorDatos implements CommandLineRunner {
 
         carlos.setRol(docente);
         carlos = usuarioRepository.save(carlos);
-
+        
+        Usuario elena = crearEstudiante("Elena Mora", "elena@correo.com", coordinadorRol);
         Usuario ana = crearEstudiante("Ana Gómez", "ana@correo.com", estudiante);
         Usuario luis = crearEstudiante("Luis Torres", "luis@correo.com", estudiante);
         Usuario marta = crearEstudiante("Marta Díaz", "marta@correo.com", estudiante);
@@ -110,6 +116,12 @@ public class CargadorDatos implements CommandLineRunner {
         curso.setEstado("ACTIVO");
         curso.setOferta(oferta);
         curso.setDocente(carlos);
+        curso.setObjetivos("Comprender los fundamentos de Java y escribir programas básicos");
+        curso.setResultadosAprendizaje("El estudiante declara variables, usa condicionales y ciclos");
+        curso.setCupos(4);
+        curso.setFechaInicio(LocalDate.of(2026, 11, 1));
+        curso.setFechaFin(LocalDate.of(2027, 3, 30));
+        curso.setPublicacion("PUBLICADO");        
         curso = cursoRepository.save(curso);
 
         // Unidad
@@ -126,6 +138,7 @@ public class CargadorDatos implements CommandLineRunner {
         taller.setDescripcion("Resolver 10 ejercicios de declaración de variables");
         taller.setTipo("TALLER");
         taller.setPuntajeMaximo(5.0);
+        taller.setPorcentaje(60.0);        
         taller.setFechaLimite(LocalDate.of(2026, 12, 15));
         taller.setUnidad(unidad);
         taller = actividadRepository.save(taller);
@@ -134,6 +147,7 @@ public class CargadorDatos implements CommandLineRunner {
         quiz.setTitulo("Quiz de tipos de datos");
         quiz.setTipo("QUIZ");
         quiz.setPuntajeMaximo(3.0);
+        quiz.setPorcentaje(40.0);          
         quiz.setUnidad(unidad);
         quiz = actividadRepository.save(quiz);
 

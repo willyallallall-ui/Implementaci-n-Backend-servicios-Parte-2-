@@ -20,7 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import com.educacion.plataforma.dto.CalificacionRequest;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
@@ -71,4 +76,23 @@ public class EntregaController {
     public void eliminar(@PathVariable Long id) {
         entregaService.eliminar(id);
     }
+    @PostMapping(value = "/archivo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public Entrega crearConArchivo(@RequestParam Long actividadId,
+                                   @RequestParam Long estudianteId,
+                                   @RequestParam(required = false) String contenido,
+                                   @RequestParam("archivo") MultipartFile archivo) {
+        return entregaService.crearConArchivo(actividadId, estudianteId, contenido, archivo);
+    }
+
+    @GetMapping("/{id}/descargar")
+    public ResponseEntity<Resource> descargar(@PathVariable Long id, @RequestParam Long usuarioId) {
+        Entrega e = entregaService.buscarPorId(id);
+        Resource recurso = entregaService.descargarArchivo(id, usuarioId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + e.getArchivoOriginal() + "\"")
+                .body(recurso);
+    }    
 }

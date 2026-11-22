@@ -29,13 +29,16 @@ public class InscripcionService {
     private final InscripcionRepository inscripcionRepository;
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final NotificacionService notificacionService;
 
     public InscripcionService(InscripcionRepository inscripcionRepository,
                               CursoRepository cursoRepository,
-                              UsuarioRepository usuarioRepository) {
+                              UsuarioRepository usuarioRepository,
+                              NotificacionService notificacionService) {
         this.inscripcionRepository = inscripcionRepository;
         this.cursoRepository = cursoRepository;
         this.usuarioRepository = usuarioRepository;
+        this.notificacionService = notificacionService;
     }
 
     public List<Inscripcion> listar() {
@@ -68,6 +71,18 @@ public class InscripcionService {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "Este estudiante ya está inscrito en este curso");
         }
+        
+        if (!"PUBLICADO".equals(curso.getPublicacion())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "El curso aún no está publicado");
+        }
+        if (curso.getCupos() != null) {
+            long ocupados = inscripcionRepository.countByCursoIdAndEstado(curso.getId(), "ACTIVA");
+            if (ocupados >= curso.getCupos()) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "El curso no tiene cupos disponibles");
+            }
+        }
 
         inscripcion.setCurso(curso);
         inscripcion.setEstudiante(estudiante);
@@ -84,6 +99,29 @@ public class InscripcionService {
         }
         inscripcion.setEstado("CANCELADA");
         return inscripcionRepository.save(inscripcion);
+    }
+    
+        public Inscripcion retirar(Long cursoId, Long estudianteId) {
+        Inscripcion inscripcion = inscripcionRepository
+                .findByCursoIdAndEstudianteId(cursoId, estudianteId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "El estudiante no está inscrito en este curso"));
+        if (!"ACTIVA".equals(inscripcion.getEstado())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "La inscripción ya no está activa");
+        }
+        Curso curso = inscripcion.getCurso();
+        if (curso.getFechaFin() != null && LocalDate.now().isAfter(curso.getFechaFin())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "El curso ya terminó, no es posible retirarse");
+        }
+        inscripcion.setEstado("RETIRADA");
+        Inscripcion guardada = inscripcionRepository.save(inscripcion);
+
+        notificacionService.crear(curso.getDocente(), inscripcion.getEstudiante(), "RETIRO",
+                inscripcion.getEstudiante().getNombre() + " se retiró del curso \""
+                + curso.getNombre() + "\"");
+        return guardada;
     }
 
     public void eliminar(Long id) {

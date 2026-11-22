@@ -92,8 +92,10 @@ public class EstadisticaService {
             conEntregas.add(estudianteId);
             if ("CALIFICADA".equals(e.getEstado()) && e.getNota() != null) {
                 calificadas++;
+                Actividad act = e.getActividad();
+                double aporte = e.getNota() / act.getPuntajeMaximo() * 5 * act.getPorcentaje() / 100.0;
                 puntajePorEstudiante.put(estudianteId,
-                        puntajePorEstudiante.get(estudianteId) + e.getNota());
+                        puntajePorEstudiante.get(estudianteId) + aporte);
             }
         }
 
@@ -101,8 +103,8 @@ public class EstadisticaService {
         int aprobados = 0;
         int reprobados = 0;
         double sumaPromedios = 0;
-        for (Double puntaje : puntajePorEstudiante.values()) {
-            double promedio = puntajeMaximoCurso == 0 ? 0.0 : puntaje / puntajeMaximoCurso * 5;
+        for (Double definitiva : puntajePorEstudiante.values()) {
+            double promedio = redondear(definitiva);
             sumaPromedios += promedio;
             if (promedio >= NOTA_APROBACION) {
                 aprobados++;

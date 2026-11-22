@@ -18,6 +18,8 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.core.io.Resource;
+import org.springframework.web.multipart.MultipartFile;
 import com.educacion.plataforma.dto.CalificacionRequest;
 
 /**
@@ -32,15 +34,18 @@ public class EntregaService {
     private final ActividadRepository actividadRepository;
     private final UsuarioRepository usuarioRepository;
     private final InscripcionRepository inscripcionRepository;
+    private final AlmacenamientoService almacenamiento;
 
     public EntregaService(EntregaRepository entregaRepository,
                           ActividadRepository actividadRepository,
                           UsuarioRepository usuarioRepository,
-                          InscripcionRepository inscripcionRepository) {
+                          InscripcionRepository inscripcionRepository,
+                          AlmacenamientoService almacenamiento) {
         this.entregaRepository = entregaRepository;
         this.actividadRepository = actividadRepository;
         this.usuarioRepository = usuarioRepository;
         this.inscripcionRepository = inscripcionRepository;
+        this.almacenamiento = almacenamiento;
     }
 
     public List<Entrega> listar() {
@@ -92,6 +97,42 @@ public class EntregaService {
         entrega.setFechaEntrega(LocalDate.now());
         entrega.setEstado("ENTREGADA");
         return entregaRepository.save(entrega);
+    }
+
+    // Entrega con archivo: reutiliza todas las reglas de crear()
+    public Entrega crearConArchivo(Long actividadId, Long estudianteId,
+                                   String contenido, MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe adjuntar un archivo");
+        }
+        Entrega e = new Entrega();
+        Actividad a = new Actividad();
+        a.setId(actividadId);
+        Usuario u = new Usuario();
+        u.setId(estudianteId);
+        e.setActividad(a);
+        e.setEstudiante(u);
+        e.setContenido(contenido);
+        Entrega validada = crear(e);   // valida y guarda; si falla, no se guarda el archivo
+
+        validada.setArchivoOriginal(archivo.getOriginalFilename());
+        validada.setArchivoGuardado(almacenamiento.guardar(archivo));
+        return entregaRepository.save(validada);
+    }
+
+    public Resource descargarArchivo(Long entregaId, Long usuarioId) {
+        Entrega e = buscarPorId(entregaId);
+        if (e.getArchivoGuardado() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Esta entrega no tiene archivo");
+        }
+        boolean esDueno = e.getEstudiante().getId().equals(usuarioId);
+        boolean esDocente = e.getActividad().getUnidad().getCurso().getDocente().getId().equals(usuarioId);
+        if (!esDueno && !esDocente) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Solo el estudiante o el docente del curso pueden descargar este archivo");
+        }
+
+        return almacenamiento.cargar(e.getArchivoGuardado());
     }
 
     public void eliminar(Long id) {

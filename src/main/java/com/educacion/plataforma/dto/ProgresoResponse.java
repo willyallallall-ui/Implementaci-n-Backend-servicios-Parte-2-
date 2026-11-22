@@ -22,6 +22,8 @@ public class ProgresoResponse {
     private double puntajeObtenido;
     private double puntajeMaximoCurso;
     private double promedioSobre5;
+    private double porcentajeAsignado;   // suma de porcentajes de las actividades del curso
+    private double porcentajeEvaluado;    
 
     public ProgresoResponse() {
     }
@@ -58,4 +60,10 @@ public class ProgresoResponse {
 
     public double getPromedioSobre5() { return promedioSobre5; }
     public void setPromedioSobre5(double promedioSobre5) { this.promedioSobre5 = promedioSobre5; }
+    
+    public double getPorcentajeAsignado() { return porcentajeAsignado; }
+    public void setPorcentajeAsignado(double porcentajeAsignado) { this.porcentajeAsignado = porcentajeAsignado; }
+
+    public double getPorcentajeEvaluado() { return porcentajeEvaluado; }
+    public void setPorcentajeEvaluado(double porcentajeEvaluado) { this.porcentajeEvaluado = porcentajeEvaluado; }    
 }

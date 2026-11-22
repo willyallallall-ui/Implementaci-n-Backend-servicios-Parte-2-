@@ -22,6 +22,9 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
     List<Inscripcion> findByEstudianteId(Long estudianteId);
 
     boolean existsByCursoIdAndEstudianteId(Long cursoId, Long estudianteId);
+    long countByCursoIdAndEstado(Long cursoId, String estado);
+    long countByEstado(String estado);    
 
     Optional<Inscripcion> findByCursoIdAndEstudianteId(Long cursoId, Long estudianteId);
+    
 }

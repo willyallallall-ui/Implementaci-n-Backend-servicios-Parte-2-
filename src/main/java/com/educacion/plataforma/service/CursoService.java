@@ -15,6 +15,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.educacion.plataforma.service.NotificacionService;
 /**
  *
  * @author Willi
@@ -25,13 +26,16 @@ public class CursoService {
     private final CursoRepository cursoRepository;
     private final OfertaRepository ofertaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final NotificacionService notificacionService;
 
     public CursoService(CursoRepository cursoRepository,
                         OfertaRepository ofertaRepository,
-                        UsuarioRepository usuarioRepository) {
+                        UsuarioRepository usuarioRepository,
+                        NotificacionService notificacionService) {
         this.cursoRepository = cursoRepository;
         this.ofertaRepository = ofertaRepository;
         this.usuarioRepository = usuarioRepository;
+        this.notificacionService = notificacionService;
     }
 
     public List<Curso> listar() {
@@ -56,18 +60,65 @@ public class CursoService {
         curso.setOferta(buscarOferta(curso.getOferta()));
         curso.setDocente(buscarDocente(curso.getDocente()));
         normalizarEstado(curso);
-        return cursoRepository.save(curso);
+        validarFechasYCupos(curso);
+        curso.setPublicacion("BORRADOR");
+        Curso guardado = cursoRepository.save(curso);
+        notificacionService.crear(guardado.getDocente(), null, "ASIGNACION_CURSO",
+                "Se le asignó el curso \"" + guardado.getNombre() + "\"");
+        return guardado;
     }
 
     public Curso actualizar(Long id, Curso datos) {
         Curso curso = buscarPorId(id);
+        Long docenteAnterior = curso.getDocente().getId();   // 1) recordar el docente de antes
+
         curso.setNombre(datos.getNombre());
         curso.setDescripcion(datos.getDescripcion());
         curso.setEstado(datos.getEstado());
+        curso.setObjetivos(datos.getObjetivos());
+        curso.setResultadosAprendizaje(datos.getResultadosAprendizaje());
+        curso.setCupos(datos.getCupos());
+        curso.setFechaInicio(datos.getFechaInicio());
+        curso.setFechaFin(datos.getFechaFin());
         curso.setOferta(buscarOferta(datos.getOferta()));
         curso.setDocente(buscarDocente(datos.getDocente()));
         normalizarEstado(curso);
+        validarFechasYCupos(curso);
+
+        Curso guardado = cursoRepository.save(curso);
+
+        // 2) si el docente cambió, avisar al nuevo
+        if (!guardado.getDocente().getId().equals(docenteAnterior)) {
+            notificacionService.crear(guardado.getDocente(), null, "ASIGNACION_CURSO",
+                    "Se le asignó el curso \"" + guardado.getNombre() + "\"");
+        }
+        return guardado;
+    }
+
+    public Curso publicar(Long id, Long coordinadorId) {
+        verificarCoordinador(coordinadorId);
+        Curso curso = buscarPorId(id);
+        if (curso.getCupos() == null || curso.getFechaInicio() == null || curso.getFechaFin() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Para publicar, el curso debe tener cupos, fecha de inicio y fecha de fin");
+        }
+        if (curso.getObjetivos() == null || curso.getObjetivos().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Para publicar, el curso debe tener objetivos");
+        }
+        curso.setPublicacion("PUBLICADO");
         return cursoRepository.save(curso);
+    }
+
+    public Curso despublicar(Long id, Long coordinadorId) {
+        verificarCoordinador(coordinadorId);
+        Curso curso = buscarPorId(id);
+        curso.setPublicacion("BORRADOR");
+        return cursoRepository.save(curso);
+    }
+
+    public List<Curso> listarPublicados() {
+        return cursoRepository.findByPublicacion("PUBLICADO");
     }
 
     public void eliminar(Long id) {
@@ -110,6 +161,28 @@ public class CursoService {
         if (!curso.getEstado().equals("ACTIVO") && !curso.getEstado().equals("INACTIVO")) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "El estado debe ser ACTIVO o INACTIVO");
+        }
+    }
+  
+    private void validarFechasYCupos(Curso curso) {
+        if (curso.getCupos() != null && curso.getCupos() < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Los cupos deben ser 1 o más");
+        }
+        if (curso.getFechaInicio() != null && curso.getFechaFin() != null
+                && curso.getFechaFin().isBefore(curso.getFechaInicio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+    }
+
+    private void verificarCoordinador(Long coordinadorId) {
+        Usuario u = usuarioRepository.findById(coordinadorId)
+                .orElseThrow(() -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND, "Usuario no encontrado con id " + coordinadorId));
+        if (!"COORDINADOR".equalsIgnoreCase(u.getRol().getNombre())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Solo un usuario con rol COORDINADOR puede publicar cursos");
         }
     }
 }  
